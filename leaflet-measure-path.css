@@ -1,21 +1,26 @@
 .leaflet-measure-path-measurement {
     position: absolute;
-    font-size: 10px;
-    color: black;
-    text-shadow: -1px  0 0 white,
-                 -1px -1px 0 white,
-                  0 -1px 0 white,
-                  1px -1px 0 white,
-                  1px  0 0 white,
-                  1px  1px 0 white,
-                  0  1px 0 white,
-                 -1px  1px 0 white;
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: -1px  0 0 #000000,
+                -1px -1px 0 #000000,
+                0 -1px 0 #000000,
+                1px -1px 0 #000000,
+                1px  0 0 #000000,
+                1px  1px 0 #000000,
+                0  1px 0 #000000,
+                -1px  1px 0 #000000;
     white-space: nowrap;
     transform-origin: 0;
     pointer-events: none;
 }
 
-.leaflet-measure-path-measurement > div {
+.leaflet-measure-path-measurement-segment {
+    background: rgba(0, 0, 0, .5);
+    border: solid 3px black;
+    border-radius: 5px;
+    padding: 0 5px 0 5px;
     position: relative;
     margin-top: -25%;
     left: -50%;
