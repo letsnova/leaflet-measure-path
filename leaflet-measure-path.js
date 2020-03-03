@@ -300,11 +300,11 @@
           pixelDist = p1.distanceTo(p2)
           if (pixelDist >= options.minPixelDistance) {
             L.marker.measurement(
-              this._map.layerPointToLatLng([(p1.x + p2.x) / 2, (p1.y + p2.y) / 2]),
-              // for rotate labels
-              // formatter(dist), options.lang.segmentLength, this._getRotation(ll1, ll2), options)
-              formatter(dist), options.lang.segmentLength, 0, options)
-              .addTo(this._measurementLayer)
+                this._map.layerPointToLatLng([(p1.x + p2.x) / 2, (p1.y + p2.y) / 2]),
+                // for rotate labels
+                // formatter(dist), options.lang.segmentLength, this._getRotation(ll1, ll2), options)
+                formatter(dist), options.lang.segmentLength, 0, options)
+                .addTo(this._measurementLayer)
           }
         }
 
@@ -313,10 +313,10 @@
           // add measurement name to line
           if (options.measureName !== null || options.defaultMeasureName !== null) {
             L.marker.measurement(latLngs[0], (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.lineName, 0, options)
-              .addTo(this._measurementLayer)
+                .addTo(this._measurementLayer)
           }
           L.marker.measurement(ll2, formatter(totalDist), options.lang.totalLength, 0, options)
-            .addTo(this._measurementLayer)
+              .addTo(this._measurementLayer)
         }
       } else {
         formatter = this._measurementOptions.formatDistance || L.bind(this.formatDistance, this)
@@ -334,22 +334,22 @@
         // add measurement name to line
         if (options.measureName !== null || options.defaultMeasureName !== null) {
           L.marker.measurement(latLngs[0], (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.lineName, 0, options)
-            .addTo(this._measurementLayer)
+              .addTo(this._measurementLayer)
         }
         L.marker.measurement(ll2, formatter(totalDist), options.lang.totalLength, 0, options)
-          .addTo(this._measurementLayer)
+            .addTo(this._measurementLayer)
       }
 
       if (isPolygon && options.showArea && latLngs.length > 2) {
         formatter = options.formatArea || L.bind(this.formatArea, this)
         const area = ringArea(latLngs)
         L.marker.measurement(this.getBounds().getCenter(),
-          formatter(area), options.lang.totalArea, 0, options)
-          .addTo(this._measurementLayer)
+            formatter(area), options.lang.totalArea, 0, options)
+            .addTo(this._measurementLayer)
         // add measurement name to polygon
         if (options.measureName !== null || options.defaultMeasureName !== null) {
           L.marker.measurement(latLngs[0], (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.polygonName, 0, options)
-            .addTo(this._measurementLayer)
+              .addTo(this._measurementLayer)
         }
       }
 
@@ -372,6 +372,8 @@
       if (!this._map || this._measurementLayer) return this
 
       this._measurementOptions = L.extend({
+        measureName: null,
+        defaultMeasureName: null,
         showOnHover: false,
         showArea: true,
         lang: {
@@ -443,6 +445,18 @@
         L.marker.measurement(latLng,
           formatter(area), options.lang.totalArea, 0, options)
           .addTo(this._measurementLayer)
+      }
+
+      if (options.measureName !== null || options.defaultMeasureName !== null) {
+        const LABEL_OFFSET = 35
+
+        let pointMarker = this._map.latLngToContainerPoint(latLng)
+        let markerPosition = L.point([pointMarker.x, pointMarker.y + LABEL_OFFSET])
+        let position = this._map.containerPointToLatLng(markerPosition)
+
+        L.marker.measurement(position,
+            (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.lineName, 0, options)
+            .addTo(this._measurementLayer)
       }
     }
   })
