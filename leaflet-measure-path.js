@@ -11,9 +11,12 @@
       this._title = title
       this._rotation = rotation
     },
-    addTo (map) {
-      map.addLayer(this)
-      return this
+    addTo (map, visible) {
+      // Проверка на то, отображать лейбл или нет
+      if (visible) {
+        map.addLayer(this)
+        return this
+      }
     },
 
     onAdd (map) {
@@ -107,7 +110,8 @@
     }
   }
 
-  const RADIUS = 6378137
+  // Радиус земли для соответствия с нашими вычислениями
+  const RADIUS = 6371000
   // ringArea function copied from geojson-area
   // (https://github.com/mapbox/geojson-area)
   // This function is distributed under a separate license,
@@ -191,6 +195,16 @@
     }
   }
 
+  // Функция расчета расстояния между двумя точками
+  const distanceTo = function (latlng1, latlng2) {
+    var rad = Math.PI / 180,
+        dlat = latlng2.lat - latlng1.lat,
+        dlon = latlng2.lng - latlng1.lng,
+        x = Math.cos(Math.PI * (latlng2.lat + latlng1.lat) / 360),
+        c = rad * Math.sqrt(dlat * dlat + dlon * dlon * x * x )
+    return RADIUS * c;
+  }
+
   L.Polyline.include({
     showMeasurements (options) {
       if (!this._map || this._measurementLayer) return this
@@ -212,7 +226,7 @@
         }
       }, options || {})
 
-      this._measurementLayer = L.layerGroup().addTo(this._map)
+      this._measurementLayer = L.layerGroup().addTo(this._map, true)
       this.updateMeasurements()
 
       this._map.on('zoomend', this.updateMeasurements, this)
@@ -276,6 +290,12 @@
       let p2
       let pixelDist
       let dist
+      // Отображение лейбла названия
+      this.showName = this._measurementOptions.showName
+      // Отображение леблов замеров
+      this.showMeasures = this._measurementOptions.showMeasures
+      // Массив расстояний между двумя точками
+      this._measurementLayer.options.dist = []
 
       if (latLngs && latLngs.length && L.Util.isArray(latLngs[0])) {
         // Outer ring is stored as an array in the first element,
@@ -291,7 +311,12 @@
         for (let i = 1, len = latLngs.length; (isPolygon && i <= len) || i < len; i++) {
           ll1 = latLngs[i - 1]
           ll2 = latLngs[i % len]
-          dist = ll1.distanceTo(ll2)
+          dist = distanceTo(ll1, ll2)
+          this._measurementLayer.options.dist.push({
+            distance: dist,
+            a: latLngs[i - 1],
+            b: latLngs[i % len]
+          })
           totalDist += dist
 
           p1 = this._map.latLngToLayerPoint(ll1)
@@ -304,19 +329,21 @@
                 // for rotate labels
                 // formatter(dist), options.lang.segmentLength, this._getRotation(ll1, ll2), options)
                 formatter(dist), options.lang.segmentLength, 0, options)
-                .addTo(this._measurementLayer)
+                .addTo(this._measurementLayer, this.showMeasures)
           }
         }
+        // Длина всех линий замера
+        this._measurementLayer.options.totalDist = totalDist
 
         // Show total length for polylines
         if (!isPolygon) {
           // add measurement name to line
           if (options.measureName !== null || options.defaultMeasureName !== null) {
             L.marker.measurement(latLngs[0], (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.lineName, 0, options)
-                .addTo(this._measurementLayer)
+                .addTo(this._measurementLayer, this.showName)
           }
           L.marker.measurement(ll2, formatter(totalDist), options.lang.totalLength, 0, options)
-              .addTo(this._measurementLayer)
+              .addTo(this._measurementLayer, this.showMeasures)
         }
       } else {
         formatter = this._measurementOptions.formatDistance || L.bind(this.formatDistance, this)
@@ -324,32 +351,41 @@
         for (let i = 1, len = latLngs.length; i < len; i++) {
           ll1 = latLngs[i - 1]
           ll2 = latLngs[i % len]
-          dist = ll1.distanceTo(ll2)
+          dist = distanceTo(ll1, ll2)
+          this._measurementLayer.options.dist.push({
+            distance: dist,
+            a: latLngs[i - 1],
+            b: latLngs[i % len]
+          })
           totalDist += dist
 
           p1 = this._map.latLngToLayerPoint(ll1)
           p2 = this._map.latLngToLayerPoint(ll2)
 
         }
+        // Общая длина всех линий замера
+        this._measurementLayer.options.totalDist = totalDist
         // add measurement name to line
         if (options.measureName !== null || options.defaultMeasureName !== null) {
           L.marker.measurement(latLngs[0], (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.lineName, 0, options)
-              .addTo(this._measurementLayer)
+              .addTo(this._measurementLayer, this.showName)
         }
         L.marker.measurement(ll2, formatter(totalDist), options.lang.totalLength, 0, options)
-            .addTo(this._measurementLayer)
+            .addTo(this._measurementLayer, this.showMeasures)
       }
 
       if (isPolygon && options.showArea && latLngs.length > 2) {
         formatter = options.formatArea || L.bind(this.formatArea, this)
         const area = ringArea(latLngs)
+        // Плозадь замера
+        this._measurementLayer.options.area = area
         L.marker.measurement(this.getBounds().getCenter(),
             formatter(area), options.lang.totalArea, 0, options)
-            .addTo(this._measurementLayer)
+            .addTo(this._measurementLayer, this.showMeasures)
         // add measurement name to polygon
         if (options.measureName !== null || options.defaultMeasureName !== null) {
           L.marker.measurement(latLngs[0], (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.polygonName, 0, options)
-              .addTo(this._measurementLayer)
+              .addTo(this._measurementLayer, this.showName)
         }
       }
 
@@ -381,7 +417,7 @@
         }
       }, options || {})
 
-      this._measurementLayer = L.layerGroup().addTo(this._map)
+      this._measurementLayer = L.layerGroup().addTo(this._map, true)
       this.updateMeasurements()
 
       this._map.on('zoomend', this.updateMeasurements, this)
@@ -442,9 +478,11 @@
       if (options.showArea) {
         formatter = options.formatArea || L.bind(this.formatArea, this)
         const area = circleArea(this.getRadius())
+        // Площадь круга
+        this._measurementLayer.options.area = area
         L.marker.measurement(latLng,
           formatter(area), options.lang.totalArea, 0, options)
-          .addTo(this._measurementLayer)
+          .addTo(this._measurementLayer, this.showMeasures)
       }
 
       if (options.measureName !== null || options.defaultMeasureName !== null) {
@@ -456,7 +494,7 @@
 
         L.marker.measurement(position,
             (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.lineName, 0, options)
-            .addTo(this._measurementLayer)
+            .addTo(this._measurementLayer, this.showName)
       }
     }
   })
