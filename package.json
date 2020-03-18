@@ -1,6 +1,6 @@
 {
   "name": "@letsnova/leaflet-measure-path",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Show measurements on Leaflet paths",
   "main": "leaflet-measure-path.js",
   "directories": {
