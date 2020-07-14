@@ -502,4 +502,93 @@
   L.Circle.addInitHook(function () {
     addInitHook.call(this)
   })
+
+  // Функционал отображения названия маркера
+  L.Marker.include({
+    showMeasurements (options) {
+      if (!this._map || this._measurementLayer) return this
+
+      this._measurementOptions = L.extend({
+        measureName: null,
+        defaultMeasureName: null,
+        showOnHover: false,
+        showArea: false,
+        lang: {
+          totalLength: 'Total length',
+          totalArea: 'Total area',
+          segmentLength: 'Segment length',
+          lineName: 'Line name',
+          polygonName: 'Polygon name',
+          markername: 'Marker name'
+        }
+      }, options || {})
+
+      this._measurementLayer = L.layerGroup().addTo(this._map, true)
+      this.updateMeasurements()
+
+      this._map.on('zoomend', this.updateMeasurements, this)
+
+      return this
+    },
+
+    hideMeasurements () {
+      if (!this._map) return this
+
+      this._map.on('zoomend', this.updateMeasurements, this)
+
+      if (!this._measurementLayer) return this
+      this._map.removeLayer(this._measurementLayer)
+      this._measurementLayer = null
+
+      return this
+    },
+
+    onAdd: override(L.Marker.prototype.onAdd, function (originalReturnValue) {
+      const showOnHover = this.options.measurementOptions && this.options.measurementOptions.showOnHover
+      if (this.options.showMeasurements && !showOnHover) {
+        this.showMeasurements(this.options.measurementOptions)
+      }
+
+      return originalReturnValue
+    }),
+
+    onRemove: override(L.Marker.prototype.onRemove, function (originalReturnValue) {
+      this.hideMeasurements()
+
+      return originalReturnValue
+    }, true),
+
+    setLatLng: override(L.Marker.prototype.setLatLng, function (originalReturnValue) {
+      this.updateMeasurements()
+
+      return originalReturnValue
+    }),
+
+    updateMeasurements () {
+      if (!this._measurementLayer) return
+
+      const latLng = this.getLatLng()
+      const options = this._measurementOptions
+
+      this._measurementLayer.clearLayers()
+      // Отображение лейбла названия
+      this.showName = this._measurementOptions.showName
+
+      if (options.measureName !== null || options.defaultMeasureName !== null) {
+        const LABEL_OFFSET = 15
+
+        let pointMarker = this._map.latLngToContainerPoint(latLng)
+        let markerPosition = L.point([pointMarker.x, pointMarker.y + LABEL_OFFSET])
+        let position = this._map.containerPointToLatLng(markerPosition)
+
+        L.marker.measurement(position,
+          (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.markerName, 0, options)
+          .addTo(this._measurementLayer, this.showName)
+      }
+    }
+  })
+
+  L.Marker.addInitHook(function () {
+    addInitHook.call(this)
+  })
 }
