@@ -198,10 +198,10 @@
   // Функция расчета расстояния между двумя точками
   const distanceTo = function (latlng1, latlng2) {
     var rad = Math.PI / 180,
-        dlat = latlng2.lat - latlng1.lat,
-        dlon = latlng2.lng - latlng1.lng,
-        x = Math.cos(Math.PI * (latlng2.lat + latlng1.lat) / 360),
-        c = rad * Math.sqrt(dlat * dlat + dlon * dlon * x * x )
+      dlat = latlng2.lat - latlng1.lat,
+      dlon = latlng2.lng - latlng1.lng,
+      x = Math.cos(Math.PI * (latlng2.lat + latlng1.lat) / 360),
+      c = rad * Math.sqrt(dlat * dlat + dlon * dlon * x * x )
     return RADIUS * c;
   }
 
@@ -325,11 +325,11 @@
           pixelDist = p1.distanceTo(p2)
           if (pixelDist >= options.minPixelDistance) {
             L.marker.measurement(
-                this._map.layerPointToLatLng([(p1.x + p2.x) / 2, (p1.y + p2.y) / 2]),
-                // for rotate labels
-                // formatter(dist), options.lang.segmentLength, this._getRotation(ll1, ll2), options)
-                formatter(dist), options.lang.segmentLength, 0, options)
-                .addTo(this._measurementLayer, this.showMeasures)
+              this._map.layerPointToLatLng([(p1.x + p2.x) / 2, (p1.y + p2.y) / 2]),
+              // for rotate labels
+              // formatter(dist), options.lang.segmentLength, this._getRotation(ll1, ll2), options)
+              formatter(dist), options.lang.segmentLength, 0, options)
+              .addTo(this._measurementLayer, this.showMeasures)
           }
         }
         // Длина всех линий замера
@@ -340,10 +340,10 @@
           // add measurement name to line
           if (options.measureName !== null || options.defaultMeasureName !== null) {
             L.marker.measurement(latLngs[0], (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.lineName, 0, options)
-                .addTo(this._measurementLayer, this.showName)
+              .addTo(this._measurementLayer, this.showName)
           }
           L.marker.measurement(ll2, formatter(totalDist), options.lang.totalLength, 0, options)
-              .addTo(this._measurementLayer, this.showMeasures)
+            .addTo(this._measurementLayer, this.showMeasures)
         }
       } else {
         formatter = this._measurementOptions.formatDistance || L.bind(this.formatDistance, this)
@@ -368,10 +368,10 @@
         // add measurement name to line
         if (options.measureName !== null || options.defaultMeasureName !== null) {
           L.marker.measurement(latLngs[0], (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.lineName, 0, options)
-              .addTo(this._measurementLayer, this.showName)
+            .addTo(this._measurementLayer, this.showName)
         }
         L.marker.measurement(ll2, formatter(totalDist), options.lang.totalLength, 0, options)
-            .addTo(this._measurementLayer, this.showMeasures)
+          .addTo(this._measurementLayer, this.showMeasures)
       }
 
       if (isPolygon && options.showArea && latLngs.length > 2) {
@@ -380,12 +380,12 @@
         // Плозадь замера
         this._measurementLayer.options.area = area
         L.marker.measurement(this.getBounds().getCenter(),
-            formatter(area), options.lang.totalArea, 0, options)
-            .addTo(this._measurementLayer, this.showMeasures)
+          formatter(area), options.lang.totalArea, 0, options)
+          .addTo(this._measurementLayer, this.showMeasures)
         // add measurement name to polygon
         if (options.measureName !== null || options.defaultMeasureName !== null) {
           L.marker.measurement(latLngs[0], (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.polygonName, 0, options)
-              .addTo(this._measurementLayer, this.showName)
+            .addTo(this._measurementLayer, this.showName)
         }
       }
 
@@ -413,7 +413,12 @@
         showOnHover: false,
         showArea: true,
         lang: {
+          totalLength: 'Total length',
           totalArea: 'Total area',
+          segmentLength: 'Segment length',
+          lineName: 'Line name',
+          polygonName: 'Polygon name',
+          markername: 'Marker name'
         }
       }, options || {})
 
@@ -472,6 +477,10 @@
       const latLng = this.getLatLng()
       const options = this._measurementOptions
       let formatter = options.formatArea || L.bind(this.formatArea, this)
+      // Отображение лейбла названия
+      this.showName = this._measurementOptions.showName
+      // Отображение лейблов длин и площадей
+      this.showMeasures = this._measurementOptions.showMeasures
 
       this._measurementLayer.clearLayers()
 
@@ -493,8 +502,8 @@
         let position = this._map.containerPointToLatLng(markerPosition)
 
         L.marker.measurement(position,
-            (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.lineName, 0, options)
-            .addTo(this._measurementLayer, this.showName)
+          (options.measureName ? options.measureName : options.defaultMeasureName), options.lang.lineName, 0, options)
+          .addTo(this._measurementLayer, this.showName)
       }
     }
   })
